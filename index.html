@@ -94,6 +94,7 @@
             // Get possible parameters from url like imagename
             const urlSearchParams = new URL(location).searchParams;
             const imName = urlSearchParams.get("imgname");
+            const locationParam = urlSearchParams.get("location");
             let posInit = urlSearchParams.get("pos");
             const wfsInURL = urlSearchParams.get("wfs");
             if(posInit) posInit = posInit.split(",");
@@ -747,9 +748,6 @@
             view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, function () {
                 // eslint-disable-next-line no-console
                 console.info('Globe initialized');
-                //loadImageSources();
-                //updateScaleWidget();
-                // get 3D coordinates on mouse click
                 window.addEventListener('mousedown', pickPosition, false);
                 function pickPosition(event) {
 
@@ -785,16 +783,12 @@
                     }
                 }
 
-                // load3DModel();
-
                 // If the user specified an imgName in the url, we request the WFS to go to it
                 if(imName !== null){
                     console.log("accessing image specified in URL: ", imName);
                     var url = "http://134.158.75.67:8080/geoserver/alegoria/ows?SERVICE=WFS&REQUEST=GetFeature&typeName=alegoriaMerge2&VERSION=2.0.0&outputFormat=json&CQL_FILTER=name=%27" + imName + "%27";
                     fetch(url)
-                    .then((response) => {
-                        return response.json();
-                    })
+                    .then( response => response.json() )
                     .then((myJson) => {
                         console.log(myJson);
                         var feat = myJson.features[0];
@@ -1345,106 +1339,6 @@
                 }
             }
 
-
-        // Dirty little functions to show rays from ground points to camera through image
-        function showFaisceaux(){
-            var source = new FetchSource('data/');
-
-            source.open('MesuresAppuis-S2D.xml', 'text').then(
-                function(data){
-                    parser = new DOMParser();
-                    xmlDoc = parser.parseFromString(data,"text/xml");
-                    var g = xmlToJson(xmlDoc);//JSON.stringify(data));
-                    console.log(g);
-
-                    // We load the second file of ground points
-                    var sourceG = new FetchSource('data/');
-                    sourceG.open('appuis.xml', 'text').then(
-                        function(dataG){
-                            xmlDocG = parser.parseFromString(dataG,"text/xml");
-                            var g2 = xmlToJson(xmlDocG);//JSON.stringify(data));
-                            console.log(g2);
-
-                            // We draw spheres on points appuis
-                            var pG = g2.DicoAppuisFlottant.OneAppuisDAF;
-                            for(var i = 0; i < pG.length; ++i){
-                                var imageNameCurrent = "";
-                                var coordAssociatedCamera;
-                                var pos = pG[i].Pt["#text"].split(" "); //.split(" ");
-                                //console.log(pos);
-                                var coord = new itowns.Coordinates('EPSG:2154', parseFloat(pos[0]), parseFloat(pos[1]), parseFloat(pos[2]));
-                                var coordInSys = coord.as(view.referenceCrs);
-                                //  console.log(pos, coordInSys);
-                                var namePt = pG[i].NamePt["#text"];
-                               // console.log(namePt);
-
-                                var mesAppuis = g.SetOfMesureAppuisFlottants.MesureAppuiFlottant1Im;
-                                for(var j =0; j < mesAppuis.length; ++j){
-                                    //console.log(mesAppuis[j]);
-                                    var keys = Object.keys( mesAppuis[j].NameIm );
-                                    var nameImage2 = mesAppuis[j].NameIm[keys[0]];//mesAppuis[j].NameIm;
-
-                                    // When we encounter the good id of ground point we save image name and look the the right camera
-                                    var allMeasures = mesAppuis[j].OneMesureAF1I;
-                                    for(var k = 0; k < allMeasures.length; ++k){
-                                        var namePtLocal = allMeasures[k].NamePt["#text"];
-                                        //console.log(namePtLocal);
-                                        if(namePtLocal == namePt){
-                                            imageNameCurrent = nameImage2;
-                                           // console.log("imageNameCurrent",imageNameCurrent);
-                                            var cutNameCurrent = imageNameCurrent.substring(imageNameCurrent.indexOf(".tif") -12, imageNameCurrent.indexOf(".tif") );
-                                            // We then need to associate the good camera
-                                            var sceneCAMS = sceneAllCams.children;
-                                            for(var z = 0; z < sceneCAMS.length; ++z){
-                                                //console.log("sceneCAMS.name", sceneCAMS[z].name);
-                                                var cutName = sceneCAMS[z].name.substring(sceneCAMS[z].name.indexOf(".jp2") -12, sceneCAMS[z].name.indexOf(".jp2") );
-                                                //console.log(cutName);
-                                                if (cutName == cutNameCurrent){
-                                                    coordAssociatedCamera = sceneCAMS[z].position;
-                                                    console.log("aaaaaaaaaaaaaaaaaaaaaaa", cutName, coordAssociatedCamera);
-                                                }
-
-                                            }
-                                        }
-                                    }
-
-                                    //console.log(nameImage2);
-                                }
-                                // Super ugly: we now look to associate the namePT tothe image in the previous xml loaded
-
-                                // position of cam for ray: coordAssociatedCamera
-
-                                // Draw sphere at pos
-                                var geometry = new itowns.THREE.SphereGeometry( 10, 6, 6 );
-                                var col = new itowns.THREE.Color(0XFFFF00);
-                                var material = new itowns.THREE.MeshBasicMaterial( {color: new itowns.THREE.Color(0XFF0000), transparent:true, opacity:0.8} );
-                                var sphere = new itowns.THREE.Mesh( geometry, material );
-                                sphere.position.set(coordInSys.x, coordInSys.y, coordInSys.z); //console.log(sphere.position);
-                                sphere.updateMatrixWorld();
-                                view.scene.add( sphere );
-
-
-                                // RAY
-                                var material = new THREE.LineBasicMaterial({
-                                    color: 0x0000ff
-                                });
-
-                                var geometry = new THREE.Geometry();
-                                geometry.vertices.push(
-                                    coordAssociatedCamera,
-                                    sphere.position
-                                );
-
-                                var line = new THREE.Line( geometry, material );
-                                view.scene.add( line );
-
-
-                            }
-                            view.notifyChange();
-                        }
-                    );
-                }
-            );
             console.log("sceneAllCams", sceneAllCams);
         }
 
@@ -1495,7 +1389,7 @@
                  view.mainLoop.gfxEngine.renderer.autoClear = false;
                  view.mainLoop.gfxEngine.renderer.preserveDrawingBuffer = true;
                  var aspect =     view.camera.camera3D.aspect;
-                 var fov =     view.camera.camera3D.fov;
+                 ar fov =     view.camera.camera3D.fov;
                  var far =     view.camera.camera3D.far;
                  var near =     view.camera.camera3D.near;
 
@@ -1647,14 +1541,6 @@
                     console.log("cliiiick", intersects[ 0 ].object.parent);
                     handleOrientation(intersects[ 0 ].object.parent.parent);
                 }
-                /*
-                for ( var i = 0; i < intersects.length; i++ ) {
-
-                    // We put the scene camera like was the camera that took the selected photo
-                    console.log("cliiiick", intersects[ i ].object.parent);
-                    handleOrientation(intersects[ i ].object.parent.parent);
-                }
-                */
             }
 
             window.addEventListener( 'mousemove', onMouseMove, false );
@@ -1743,10 +1629,7 @@
 
             }, false);
 
-            //console.log(document.activeElement);
-            document.addEventListener('mouseup', (event) => {
-                //document.focus();
-            }, false);
+            document.addEventListener('mouseup', (event) => {}, false);
 
             function createTexturedPlane(textureUrl, opacity) {
                 var texture;
@@ -1816,16 +1699,13 @@
                 cameraHelper.updateMatrixWorld(true);
             }
 
-
             // Filtering functions
             function filterDates(t0, t1){
-                //console.log(sceneAllCams);
                 var cams = sceneAllCams.children;
                 for(var i in cams){
                     var cam = cams[i];
                     var t0Cam = new Date(cam.propAdded.t0);
                     var year = 1900 + t0Cam.getYear();
-                    //console.log(year, t0);
                     if(Math.abs(year - t0) < 1){
                         cam.visible = true;
                     }else{
@@ -1853,7 +1733,6 @@
 
                 // LOOP THROUGH EACH CELL OF THE CURENT ROW TO READ CELL VALUES.
                 for (var j = 0; j < objCells.length; j++) {
-                   //console.log(objCells[j].innerHTML);
                    if(!objCells[j].innerHTML.includes("style"))  // Ugly way to detect georeferenced image because they have style for border
                         objCells[j].style = display;
 
@@ -1862,6 +1741,12 @@
             }
           document.getElementById("switchButton").addEventListener("change", filterThumbnails);
           document.getElementById("goButton").addEventListener("click", event => { computeResection(event, document.getElementById('img').src.split('/').pop(), true); });
+
+	  if (locationParam) {
+               console.log('Travelling to '+locationParam);
+	       document.getElementById("nameLocation").value = locationParam;
+               geocode(locationParam).then(travelTo);
+	  }
 
 </script>
     </body>
