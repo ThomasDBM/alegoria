@@ -22,7 +22,7 @@ body {
 #menuDiv {
     position: absolute;
     top:0px;
-    margin-left: 0px;
+    right: 250px;
 }
 
 @media (max-width: 600px) {
@@ -128,7 +128,6 @@ body {
     height: 50%;
     width: auto;
     max-width: 600px;
-
 }
 #img{
     height: 100%;
@@ -144,21 +143,34 @@ body {
     margin-right: 20px;
     position: absolute;
     left: 20;
-    bottom: 210;
+    bottom: 40px;
     color: white;
 }
-#info {
-    color: black;
+#logo {
     position: absolute;
-    bottom: 0;
+    left: 0;
+    top: 0;
+    margin-left: 15px;
+    margin-top: 15px;
+    padding: 0.3rem;
+    background-color: rgba(255, 255, 255, 0.493);
+    border: 2px solid black;
+    border-radius: 5px;
+    z-index: -1;
+}
+#info {
+    position: absolute;
     right: 0;
+    bottom: 0;
     margin-right: 15px;
+    margin-bottom: 15px;
     padding: 0.3rem;
     background-color: rgba(255, 255, 255, 0.493);
     border: 2px solid black;
     border-radius: 5px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 11px;
+    color: black;
 }
 .styleForm {
     text-align: center;
@@ -171,16 +183,18 @@ body {
     sans-serif;
     font-size: 12px;
     left: 0;
-    bottom: 176;
+    bottom: 0;
 }
 
 .styleButton{
+     align: bottom;
     display: block;
     margin-bottom: 0px;
     margin-right: 0px;
     position: absolute;
-    left: 0;
-    bottom: 208;
+    left: 20;
+    bottom: 60px;
+    z-index: 10; 
     color: rgb(187, 34, 179);
 }
 
@@ -211,7 +225,7 @@ body {
     max-width: 450px;
     background-color: rgba(255, 186, 186, 0.7);
     right: 4;
-    bottom: 206;
+    bottom: 0;
 }
 .buttonX {
     background-color: #4CAF50; /* Green */
@@ -243,66 +257,3 @@ p { background-color:#FFFFFF;
     left: 4;
 }
 
-
-
-.switch {
-    position: absolute;
-    bottom: 270;
-    right:20;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-  }
-
- .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .sliders {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc000;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  .sliders:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  input:checked + .sliders {
-    background-color: #2196F3;
-  }
-
-  input:focus + .sliders {
-    box-shadow: 0 0 1px #2196F3;
-  }
-
-  input:checked + .sliders:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-
-  /* Rounded sliders */
-  .sliders.round {
-    border-radius: 34px;
-  }
-
-  .sliders.round:before {
-    border-radius: 50%;
-  }

@@ -12,7 +12,7 @@ var div, image, image_width, image_height, image_rendwidth, image_rendheight, im
 var xmlDoc, element1;
 
 
-function initXML2D(){
+function initXML2D(NameIm){
     i = 0;
     //store image parameters
     image = document.getElementById("img");
@@ -27,14 +27,9 @@ function initXML2D(){
     xmlDoc = document.implementation.createDocument(null, 'SetOfMesureAppuisFlottants', null);
     element1 = xmlDoc.createElement('MesureAppuiFlottant1Im');
     subElement1 = xmlDoc.createElement('NameIm');
-    subElement1.textContent = image.src.replace(/^.*[\\\/]/, '');
+    subElement1.textContent = NameIm;
     xmlDoc.documentElement.appendChild(element1);
     element1.appendChild(subElement1);
-
-    var miniDiv = document.getElementById('miniDiv');
-    var img = document.getElementById('img');
-
-    console.log(miniDiv);
 }
 
 function getImgCoordOnClick(event){

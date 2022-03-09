@@ -11,8 +11,8 @@
     <body>
 
         <div id="viewerDiv">
+                <a href="https://www.alegoria-project.fr"><img id="logo" src="data/logoAlegoria.jpg"/></a>
                 <p id="info">
-                        <img id="imgLogo" src="data/logoAlegoria.jpg"/> <!-- onmousedown="getImgCoordOnClick(event)"> -->
                         <br>
                         <a href="http://www.archives-nationales.culture.gouv.fr/" target="_blank"> Images: Archives Nationales </a>
                 </p>
@@ -22,7 +22,7 @@
                                                             bottom: 0;
                                                             right: 0;
                                                             border: 0px white solid;
-                                                            height:194px;
+                                                            height:0px;
                                                             width: 100%;
                                                             margin: 0;
                                                             padding: 0;
@@ -81,7 +81,7 @@
             var OrientedImageMaterial = PhotogrammetricCamera.OrientedImageMaterial;
             var NewMaterial = PhotogrammetricCamera.NewMaterial;
             var ShadowMapMaterial = PhotogrammetricCamera.ShadowMapMaterial;
-            var RadialDistortion = PhotogrammetricCamera.RadialDistortion
+            var RadialDistortion = PhotogrammetricCamera.Distortions.RadialDistortion;
             var PhotogrammetricCamera = PhotogrammetricCamera.PhotogrammetricCamera;
         </script>
         <script src="js/scene2d.js"></script>
@@ -93,7 +93,8 @@
         <script type="module">
             // Get possible parameters from url like imagename
             const urlSearchParams = new URL(location).searchParams;
-            const imName = urlSearchParams.get("imgname");
+            var imgName = urlSearchParams.get("imgname");
+            var imName = imgName+".jpg";
             const locationParam = urlSearchParams.get("location");
             let posInit = urlSearchParams.get("pos");
             const wfsInURL = urlSearchParams.get("wfs");
@@ -213,6 +214,7 @@
             view.mainLoop.gfxEngine.renderer.domElement.style.zIndex=-2;
             setupLoadingScreen(viewerDiv, view);
             var menuGlobe = new GuiTools('menuDiv', view);
+            menuGlobe.gui.close();
 
             view.camera.camera3D.near = 0.4;
             addRasterLayers(itowns, view, menuGlobe);
@@ -236,9 +238,10 @@
 */
             function hideShow() {
                 var x = document.getElementById("img");
+                const show = x.style.display === "none";
                 var button = document.getElementById("buttonHideShow");
 		if (!x || !button) { console.error("img is not initialized yet"); return; }
-                if (x.style.display === "none") {
+                if (show) {
                     x.style.display = "block";
                     button.innerHTML = '_';
                 } else {
@@ -257,12 +260,14 @@
                 return fetch(url + text)
                 .then(response => response.json())
                 .then(json => {
-                    const coord = json.features[0].geometry.coordinates; console.log(coord);
+                    if (json.features.length==0) return undefined;
+	            const coord = json.features[0].geometry.coordinates; console.log(coord);
                     return new itowns.Coordinates('EPSG:4326', coord[0], coord[1], coord[2]);
                 });
 	    }
 
             function travelTo(coord){
+                    if (coord === undefined) return;
                     var pathTravel = [];
                     var timeTravel = 5000;
                     pathTravel.push({ range: 100000, time: timeTravel/2 , tilt: 80, heading: -50});
@@ -295,16 +300,18 @@
                     //https://wxs.ign.fr/02eikbvn4qqd6y1g5iiiq8fi/iipsrv.fcgi?FIF=DEMAT.PVA/2324-0191/IGNF_PVA_1-0__1947-04-10__C2324-0191_1947_CDP2368_0002.jp2&LYR=20&WID=200&CVT=JPEG
                     // Dessous: url fonctionnant pour les PVA IGN en jp2 servies par le Geoportail
                     // var url = 'https://wxs.ign.fr/02eikbvn4qqd6y1g5iiiq8fi/iipsrv.fcgi?FIF=DEMAT.PVA/' + imgName + '.jp2' + '&WID=' + lowResValue + '&CVT=JPEG';
-                    var url = "data/" + imgName;  // Default url (imported image from user for registration)
+                    // var url = "data/" + imgName;  // Default url (imported image from user for registration)
                     //  if(imgName.includes("IGNF_PVA"))
                     //     url = 'https://wxs.ign.fr/02eikbvn4qqd6y1g5iiiq8fi/iipsrv.fcgi?FIF=DEMAT.PVA/' + imgName + '.jp2' + '&WID=' + lowResValue + '&CVT=JPEG';
+
 
                     // We construct the url using the source table
                     // imageSourcesInfoDico is already constructed using the source table
                     if(source != null){
                         var propSource = imageSourcesInfoDico['sources.' + source];
-                        //   console.log("poooooop", propSource);
-                        if(propSource.iip != null)  // ex iip: "https://wxs.ign.fr/{key}/iipsrv.fcgi?FIF=DEMAT.PVA/{rlt}_{image}.jp2"
+                        console.log(propSource);
+			// console.log("poooooop", propSource);
+                        if(propSource && propSource.iip != null)  // ex iip: "https://wxs.ign.fr/{key}/iipsrv.fcgi?FIF=DEMAT.PVA/{rlt}_{image}.jp2"
                             url = 'https://wxs.ign.fr/02eikbvn4qqd6y1g5iiiq8fi/iipsrv.fcgi?FIF=DEMAT.PVA/' + imgName + '.jp2' + '&WID=' + lowResValue + '&CVT=JPEG';
                             else if(propSource.highres != null)
                                 url = propSource.highres.replace('{name}', imgName);//replace(/{name}/gi, )
@@ -313,6 +320,8 @@
                                     else
                                         url = "data/" + imgName;
                     }
+
+                    var url = "http://localhost:5004/"+imgName+"/full/full/0/default.jpg";
 
                     // We check if image was inserted in database with extension ( avoid .jpg.jpg for example)
                     url = url.replace(".jpg.jpg", ".jpg");
@@ -326,7 +335,7 @@
                     var size = [prop.sx, prop.sy];
                     //[ 9100, 9500 ]; //prop.px * 2, prop.py * 2];
                     var point = [ prop.px, prop.py ];
-                    var disto = [ { type: "ModRad", C: new THREE.Vector2(prop.cx, prop.cy), R: new THREE.Vector4(prop.c3, prop.c5, prop.c7, prop.cm), project: RadialDistortion.project } ];
+                    var disto = [ new RadialDistortion(new THREE.Vector2(prop.cx, prop.cy), new THREE.Vector4(prop.c3, prop.c5, prop.c7, prop.cm)) ];
                     var imageMatrix = new THREE.Matrix4();
                     if(prop.m00 != undefined){  // If there are some Crop Infos, we set the image matrix (not identity)
                         imageMatrix.elements[0]  = prop.m00;
@@ -634,8 +643,8 @@
                     // Then we create (initialize) the 4 xml files needed. Ground points, 2D image point, camera calibration and the micmac chantier descriptor
                     setTimeout(function() {   // Ugly timer cause src change/affectation takes time and no callback used
                         arrayImages.unshift(  {image: currentImgProp.jpeg, distance: 100, opacity: 1, plane:null} );
-                        initXML2D();
-                        initXML3D();
+                        initXML2D(currentImgProp.jpeg);
+                        initXML3D(currentImgProp.jpeg);
                         createCalib(); // We create a calibration file knowing just the image size
                         createMicmacChantierDescripteur(); // We create the micmac chantier descriptor
                         }, 1000);
@@ -778,7 +787,7 @@
 
                         // Launch computation after at least 3 points
                         if(ptname >= 4){
-                            computeResection({}, document.getElementById('img').src.split('/').pop(), false);
+                            computeResection({}, imName, false);
                         }
                     }
                 }
@@ -786,6 +795,20 @@
                 // If the user specified an imgName in the url, we request the WFS to go to it
                 if(imName !== null){
                     console.log("accessing image specified in URL: ", imName);
+                    //fetch('http://134.158.75.67/alegoriaX/src/data/test/Ori-Aspro/Orientation-LAPIE1_FRAN_0207_1992_L.jpg.xml').then(console.log)
+
+                // fetch orientation file
+                var source = new FetchSource('data/test/');
+                // parse micmac orientation
+		const name = 'Orientation-' + imName + '.xml';
+                source.open('Ori-Aspro/'+name, 'text')
+                    .then(data => Parsers.MicmacParser.parse(data, source, name))
+                    .then(handleOrientation);
+		// change orientation file each time you change the picture!
+            
+
+
+/*
                     var url = "http://134.158.75.67:8080/geoserver/alegoria/ows?SERVICE=WFS&REQUEST=GetFeature&typeName=alegoriaMerge2&VERSION=2.0.0&outputFormat=json&CQL_FILTER=name=%27" + imName + "%27";
                     fetch(url)
                     .then( response => response.json() )
@@ -808,6 +831,7 @@
                             handleOrientation(camImg);
                             }
                     });
+*/
 
                 }
 
@@ -845,6 +869,7 @@
 
                     formData.append('files[]', file);
                 }
+                imgName = files[0].name;
                 //console.log(form, formData, files, files[0].name);
                 fetch(url, {
                     method: 'POST',
@@ -857,8 +882,8 @@
                     // Then we create (initialize) the 4 xml files needed. Ground points, 2D image point, camera calibration and the micmac chantier descriptor
                     setTimeout(function() {   // Ugly timer cause src change/affectation takes time and no callback used
                         arrayImages.unshift(  {image: files[0].name, distance: 100, opacity: 1, plane:null} );
-                        initXML2D();
-                        initXML3D();
+                        initXML2D(files[0].name);
+                        initXML3D(files[0].name);
                         createCalib(); // We create a calibration file knowing just the image size
                         createMicmacChantierDescripteur(); // We create the micmac chantier descriptor
                     }, 1000);
@@ -887,7 +912,7 @@
 
 
             function launchMicMac(event, imgName){
-
+		console.log("launchMicMac");
                 var xmlhttp;
                 if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari
                     xmlhttp = new XMLHttpRequest();
@@ -901,6 +926,7 @@
                         /*
                         var output_array = JSON.parse(this.responseText);
                         var output = output_array['output'];
+			output = output.replace('\\n','\n');
                         var returned_value = output_array['status'];
                         console.log(output);
                         if(returned_value==0){
@@ -933,11 +959,13 @@
 
                 xmlhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        console.log(this.responseText);
+                        var json = JSON.parse(this.responseText);
+			json.output = json.output.replace('\\n','\n');
+                        console.log(json.input,json.output);
                         if(show) showResection();
                     }
                 };
-                xmlhttp.open("GET", "php/launchMicMac.php" +"?"+ "imagename=" + imgName + "&dir=" + currentDATADirectory, true);
+                xmlhttp.open("GET", "php/launchMicMac.php" +"?"+ "imagename=" + imName + "&dir=" + currentDATADirectory, true);
                 xmlhttp.send();
             }
 
@@ -965,7 +993,7 @@
                 var group = new THREE.Group();
                 // place a frustum
                 {
-                    m = new THREE.Matrix4().getInverse(camera.projectionMatrix);
+                    const m = new THREE.Matrix4().copy(camera.projectionMatrix).invert();
                     var geometry = new THREE.BufferGeometry();
                     var vertices = new Float32Array(15);
                     // get the 4 corners on the near plane (neglecting distortion)
@@ -975,7 +1003,7 @@
                     new THREE.Vector3(  1, -1, -1 ).applyMatrix4(m).toArray(vertices, 12);
                     var indices = [ 0, 1, 2,  0, 2, 3,  0, 3, 4,  0, 4, 1,  1, 3, 2,  1, 4, 3 ];
                     geometry.setIndex( indices );
-                    geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+                    geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
                     geometry.addGroup(0, 12, 0);
                     geometry.addGroup(12, 6, 1);
                     // viewMaterials[camera.name] = new OrientedImageMaterial(viewMaterialOptions);
@@ -989,28 +1017,10 @@
                 {
                     var geometry = new THREE.SphereBufferGeometry(2, 8, 8 );
                     var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-                   // group.add(new THREE.Mesh( geometry, material ));
+                    // group.add(new THREE.Mesh( geometry, material ));
                 }
                 return group;
             };
-
-
-            function setMaterial(material, camera) {
-                //material.map =  uvTexture; //textures[camera.name] || uvTexture;
-                camera.getWorldPosition(material.uvwPosition);
-                const m = new THREE.Matrix4().copy(camera.matrixWorldInverse);
-                m.setPosition(0,0,0);
-                material.uvwPreTransform.copy(camera.preProjectionMatrix).multiply(m);
-                material.uvwPostTransform.copy(camera.postProjectionMatrix);
-
-                if (camera.distos && camera.distos.length == 1 && camera.distos[0].type === 'ModRad') {
-                    material.uvDistortion = camera.distos[0];
-                } else {
-                    material.uvDistortion = { C: new THREE.Vector2(), R: new THREE.Vector4() };
-                    material.uvDistortion.R.w = Infinity;
-                }
-            }
-
 
             // Function to export the photogrammetric camera to the Database through WFS
             function saveCamToWFS(){
@@ -1068,22 +1078,19 @@
                 arrDisplayedImages.push(cam);
 
                 // Already set in case of DB WFS. We can set here the High Resolution image (TODO)
-                if(cam.name === ""){  // Old school XML
-                    setMaterial(textureMaterial, cam);
+                if(true) { // cam.name === ""){  // Old school XML
+                    textureMaterial.setCamera(cam);
                     camHelper = cameraHelper(cam, textureMaterial);
                     var scale = currentDistance / 100;
                     camHelper.scale.set(scale,scale,scale);
                     cam.add(camHelper);
                     cam.updateMatrixWorld();
-                    globalCurrentCamOriented = cam;
-                    view.scene.add(globalCurrentCamOriented);
+                    view.scene.add(cam);
                     // camera set from micmac orientation file
-                    camera = cam;
-                }else{   // DB WFS
-                    globalCurrentCamOriented = cam;
-                    camera = cam;
                 }
 
+                globalCurrentCamOriented = cam;
+                camera = cam;
                 var pictureInfos = arrayImages[currentIndiceNav];
 
                 // Dirty mod to handle previous version with the new DB WFS one
@@ -1103,7 +1110,7 @@
                     // We update the image with a bigger resolution
                     console.log("cam.namecam.namecam.namecam.name: ",cam.name);
                     cam.name =  cam.name.replace("WID=" + lowResValue, "WID=" + highResValue);
-                    textureMaterial.map = new itowns.THREE.TextureLoader().load(cam.name);
+                    textureMaterial.map = new itowns.THREE.TextureLoader().load("http://search-engine.alegoria-project.fr/api/v0_1/images/"+cam.name);
                     console.log("textureMaterial.map ",textureMaterial.map);
                     /*
                     var textureMaterialP = new OrientedImageMaterial({
@@ -1112,7 +1119,7 @@
                         transparent:true,
                     });
 
-                    setMaterial(textureMaterialP, cam);
+                    textureMaterialP.setCamera(cam);
                     */
                 }
 
@@ -1147,7 +1154,7 @@
                     side: THREE.DoubleSide
                 });
 
-                setMaterial(textureMaterialP, cam);
+                textureMaterialP.setCamera(cam);
                 var camHelper = cameraHelper(cam, textureMaterialP);
                 var scale = currentDistance / 100;
                 camHelper.scale.set(scale,scale,scale);
@@ -1340,9 +1347,8 @@
             }
 
             console.log("sceneAllCams", sceneAllCams);
-        }
 
-        // Changes XML to JSON
+            // Changes XML to JSON
             function xmlToJson(xml) {
 
                 // Create the return object
@@ -1389,7 +1395,7 @@
                  view.mainLoop.gfxEngine.renderer.autoClear = false;
                  view.mainLoop.gfxEngine.renderer.preserveDrawingBuffer = true;
                  var aspect =     view.camera.camera3D.aspect;
-                 ar fov =     view.camera.camera3D.fov;
+                 var fov =     view.camera.camera3D.fov;
                  var far =     view.camera.camera3D.far;
                  var near =     view.camera.camera3D.near;
 
@@ -1502,7 +1508,7 @@
 
             // We can finally now launch Aspro
             setTimeout(function() {   // Ugly timer cause src change/affectation takes time and no callback used
-                    computeResection({}, document.getElementById('img').src.split('/').pop(), true);
+                    computeResection({}, imName, true);
                 }, 650);
         }
 
@@ -1740,13 +1746,88 @@
 
             }
           document.getElementById("switchButton").addEventListener("change", filterThumbnails);
-          document.getElementById("goButton").addEventListener("click", event => { computeResection(event, document.getElementById('img').src.split('/').pop(), true); });
+          document.getElementById("goButton").addEventListener("click", event => { computeResection(event, imName, true); });
 
-	  if (locationParam) {
+          if (imgName) {
+                var source = new FetchSource('data/test/');
+		const name = 'Orientation-' + imgName + '.jpg.xml';
+                source.open('Ori-Aspro/' + name, 'text') // change orientation file each time you change the picture!
+                    .then(data => Parsers.MicmacParser.parse(data, source, name))
+                    .then(handleOrientation)
+                    .then(hideShow)   
+                    .catch(() => {
+
+          const xparam = urlSearchParams.get('X');
+          const yparam = urlSearchParams.get('Y');
+          if (xparam && yparam) { 
+               console.log('Travelling to ( '+xparam+' , '+yparam+' )');
+               const coord = new itowns.Coordinates('EPSG:2154', Number(xparam), Number(yparam));
+               console.log(coord);
+               travelTo(coord);
+	  } else if (locationParam && locationParam !== "-") {
                console.log('Travelling to '+locationParam);
 	       document.getElementById("nameLocation").value = locationParam;
                geocode(locationParam).then(travelTo);
 	  }
+
+	});
+
+	  }
+
+	 if (imgName) {
+               const img = document.getElementById("img");
+               const src = "http://search-engine.alegoria-project.fr/api/v0_1/images/" + imgName;
+
+               // download the image
+               img.onload = function () {
+                 // setup micmac processing
+                 initXML2D(imgName+".jpg");
+                 initXML3D(imgName+".jpg");
+                 createCalib(); // We create a calibration file knowing just the image size
+                 createMicmacChantierDescripteur(); // We create the micmac chantier descriptor
+	       }
+               img.src = src;
+               
+	       // upload it for micmac processing
+               fetch(src)
+               .then(response => response.blob())
+               .then((blob) => {
+//                 const file = new File([blob], imName, {type: blob.type});
+                 const file = new File([], imName, {type: blob.type});
+                 const formData = new FormData();
+                 formData.append('files[]', file);
+                 const url = 'php/process.php';
+                 fetch(url, {
+                      method: 'POST',
+                      body: formData
+                  }).then(response => {
+			console.log(response);
+                  });
+              });
+
+
+              const formData = new FormData();
+              formData.append('identity', imgName);
+              formData.append('fond', 'LAPIE'); // unused
+              const getImageInfo = "http://search-engine.alegoria-project.fr/api/v0_1/metadata/"+imgName+"/getInfo";
+            
+              fetch(getImageInfo)
+              .then(response => response.json())
+              .then(json => {
+                  const infos = json.infoImg.results.bindings[0];
+                  console.log(infos);
+                  const p = document.getElementById('info');
+                  if (!infos) return;
+                  p.innerHTML = "<ul>";
+                  if (infos.institution) p.innerHTML += "<li>Institution : " + infos.institution.value + "</li>";
+                  if (infos.fond) p.innerHTML += "<li>Fond : " + infos.fond.value + "</li>";
+                  if (infos.title) p.innerHTML += "<li>Titre : <a href=\"" + infos.record.value+"\">"+infos.title.value + "</a></li>";
+                  if (infos.nomFichierImage) p.innerHTML += "<li>Image : <a href=\"http://search-engine.alegoria-project.fr/api/v0_1/images/" + infos.nomFichierImage.value+"\">"+infos.nomFichierImage.value + "</a></li>";
+                  if (infos.nomLieu) p.innerHTML += "<li>Lieu : <a href=\"" + infos.lieu.value+"\">"+infos.nomLieu.value + "</a></li>";
+                  p.innerHTML += "</ul>";
+                  if (infos.comments) p.innerHTML += "<span>" + infos.comments.value + "</span>";
+              });         
+           }
 
 </script>
     </body>

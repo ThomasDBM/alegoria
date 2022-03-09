@@ -43,7 +43,7 @@ function terminal($command)
         $return_var = 1;
     }
 
-    return array('output' => $output , 'status' => $return_var);
+    return array('input' => $command, 'output' => $output , 'status' => $return_var);
 }
 
 //MicMac inputs
@@ -64,7 +64,7 @@ chdir($path_to_output);
 
 //MicMac command to compute image orientation based on calibration file, 2D image coordinates file, and 3D ground control points file
 $cmd = "mm3d aspro" . " " . $img_name . " " . $calib_file . " " . $gcp_file . " " . $appuis_file;
-echo $cmd ;
+//echo $cmd ;
 
 // $cmd = "mm3d Init11P " . $gcp_file . " " . $appuis_file . " Rans=[500,6]"  ;
 

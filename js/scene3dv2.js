@@ -14,14 +14,14 @@ xmlXtra.documentElement.appendChild(s1);
 var xmlDoc2;
 var dico;
 
-function initXML3D(){
+function initXML3D(NameIm){
 
     xmlDoc2 = document.implementation.createDocument(null, 'Global', null);
     //DicoAppuisFlottant
 
     var image2 = document.getElementById("img");
     var s1 = xmlDoc2.createElement('NameIm');
-    s1.textContent = image2.src.replace(/^.*[\\\/]/, '');
+    s1.textContent = NameIm;
     xmlDoc2.documentElement.appendChild(s1);
     //element1.appendChild(s1);
 
