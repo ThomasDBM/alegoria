@@ -757,6 +757,8 @@
             view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, function () {
                 // eslint-disable-next-line no-console
                 console.info('Globe initialized');
+                // Put Ortho to back
+                itowns.ColorLayersOrdering.moveLayerToIndex(view, 'Ortho', 0);
                 window.addEventListener('mousedown', pickPosition, false);
                 function pickPosition(event) {
 
