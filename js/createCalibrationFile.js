@@ -80,4 +80,9 @@ function createCalib(){
 }
 
 
-
+function createCalib_versionAPI(imgName, conv, PP, F, szIm, cDist){
+    fetch(`http://localhost:3000/calib/${imgName}/${conv}/${PP[0]},${PP[0]}/${F}/${szIm[0]},${szIm[0]}/${cDist[0]},${cDist[0]}`)
+        .then(response => response.text())
+        .then(response => console.log(response))
+        .catch(error => console.log('Error caught: ' + error));
+}
