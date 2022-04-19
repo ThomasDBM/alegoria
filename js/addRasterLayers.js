@@ -9,6 +9,36 @@ function addRasterLayers(itowns, view, menuGlobe) {
       view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
   });
 
+
+                  // Call WMS source on Geoserver for Heatmap
+                  const wmsSource = new itowns.WMSSource({
+                    url: 'http://localhost:8080/geoserver/alegoria/wms',
+                    version: '1.3.0',
+                    name: 'heatmapView',
+                    style: '',
+                    format: 'image/png',
+                    crs: 'EPSG:3857',
+                    extent: {
+                        west: '-0,05184205',
+                        east: '656895,53',
+                        south: '0',
+                        north: '6984581,76',
+                    },
+                    transparent: true,
+                });
+                
+                
+                // Create the layer
+                const colorlayer = new itowns.ColorLayer('HeatMap', {
+                    source: wmsSource,
+                    visible: false,
+                    opacity: 0.6,
+                });
+    
+                // Add the layer
+                view.addLayer(colorlayer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+
+
   /*          // USA ORTHO WMTS
   itowns.Fetcher.json('../itowns-photogrammetric-camera/examples/layers/JSONLayers/us.json').then(function _(config) {
       config.source = new itowns.WMTSSource(config.source);

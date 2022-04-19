@@ -261,10 +261,10 @@ function colorBuildings(properties) {
 
 */
 function addBuildingLayer(itowns, view) {
-            console.log("addBuildingLayer");
+            //console.log("addBuildingLayer");
 		let meshes = [];
             function colorBuildings(properties) {
-                console.log('color');
+                //console.log('color');
 		if (properties.geojson.id.indexOf('bati_remarquable') === 0) {
                     return color.set(0x5555ff);
                 } else if (properties.geojson.id.indexOf('bati_industriel') === 0) {
@@ -274,17 +274,17 @@ function addBuildingLayer(itowns, view) {
             }
 
             function altitudeBuildings(properties) {
-                    console.log('alti');
+                    //console.log('alti');
                 return properties.z_min - properties.hauteur;
             }
 
             function extrudeBuildings(properties) {
-                    console.log('extrude');
+                    //console.log('extrude');
                 return properties.hauteur;
             }
 
             function acceptFeature(properties) {
-                    console.log('accept');
+                    //console.log('accept');
                 return !!properties.hauteur;
             }
 
@@ -292,7 +292,7 @@ function addBuildingLayer(itowns, view) {
 		var i;
                 var mesh;
                 if (meshes.length) {
-                    console.log(meshes);
+                    //console.log(meshes);
                     view.notifyChange(view.camera.camera3D, true);
                 }
                 for (i = 0; i < meshes.length; i++) {
@@ -326,7 +326,7 @@ function addBuildingLayer(itowns, view) {
             var wfsBuildingLayer = new itowns.FeatureGeometryLayer('WFS Building',{
                 batchId: function (property, featureId) { return featureId; },
                 onMeshCreated: function scaleZ(mesh) {
-                    console.log('meshcreated');
+                    //console.log('meshcreated');
                     mesh.children.forEach(c => {
                         c.scale.z = 0.01;
                         meshes.push(c);
