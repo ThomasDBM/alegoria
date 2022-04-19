@@ -14,6 +14,10 @@ xmlXtra.documentElement.appendChild(s1);
 var xmlDoc2;
 var dico;
 
+let listX = [];
+let listY = [];
+let listZ = [];
+
 function initXML3D(NameIm){
 
     xmlDoc2 = document.implementation.createDocument(null, 'Global', null);
@@ -31,6 +35,14 @@ function initXML3D(NameIm){
 
 //Function to export 3D coordinates
 function export3Dcoord(ptname,x,y,z) {
+
+    //Ajout axelle :
+    listX.push(x);
+    listY.push(y);
+    listZ.push(z);
+    console.log(listX);
+    console.log(listY);
+    console.log(listZ);
         
     //update the xml document
     var element1 = xmlDoc2.createElement('OneAppuisDAF');

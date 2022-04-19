@@ -11,6 +11,8 @@ var i;
 var div, image, image_width, image_height, image_rendwidth, image_rendheight, image_offsetLeft, image_offsetTop;
 var xmlDoc, element1;
 
+let listX = [];
+let listY = [];
 
 function initXML2D(NameIm){
     i = 0;
@@ -50,6 +52,13 @@ function getImgCoordOnClick(event){
         var cursor_y = event.pageY;
         var pos_x = (cursor_x - image_offsetLeft + 0.5) * image_width / image_rendwidth;
         var pos_y = (cursor_y - image_offsetTop + 0.5) * image_height / image_rendheight;
+
+        //Ajout axelle :
+        listX.push(pos_x);
+        listY.push(pos_y);
+        console.log(listX);
+        console.log(listY);
+        
         var point = document.createElement("img");
         //display a cross on click
         point.setAttribute('src', "data/cross.png");
