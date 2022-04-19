@@ -12,9 +12,9 @@ function addRasterLayers(itowns, view, menuGlobe) {
 
                   // Call WMS source on Geoserver for Heatmap
                   const wmsSource = new itowns.WMSSource({
-                    url: 'http://localhost:8080/geoserver/cite/wms',
+                    url: 'http://localhost:8080/geoserver/alegoria/wms',
                     version: '1.3.0',
-                    name: 'PointGridView',
+                    name: 'heatmapView',
                     style: '',
                     format: 'image/png',
                     crs: 'EPSG:3857',
