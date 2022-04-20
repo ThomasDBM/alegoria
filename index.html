@@ -910,7 +910,7 @@
 
 
             // Launch micmac computation
-            function computeResection(event, imgName, show){
+            async function computeResection(event, imgName, show){
                 console.log("Computing resection of image: ", imgName);
                 currentImageName = imgName;
                 var xmlhttp;
@@ -930,7 +930,74 @@
                 };
                 xmlhttp.open("GET", "php/launchMicMac.php" +"?"+ "imagename=" + imName + "&dir=" + currentDATADirectory, true);
                 xmlhttp.send();
+
+                // Ajout axelle :
+                let calib_fetch;
+
+                var imageXX = document.getElementById("img");
+                var imageXX_width = imageXX.naturalWidth; //imageXX real width
+                var imageXX_height = imageXX.naturalHeight; //imageXX real height
+
+                console.log(imageXX_width + " " + imageXX_height)
+
+                // createCalib_versionAPI(imName, 'eConvApero_DistM2C', [imageXX_width/2, imageXX_height/2], Math.max(imageXX_width, imageXX_height) * 50 / 36, [imageXX_width,imageXX_height], [imageXX_width/2, imageXX_height/2])
+
+                let point3d_fetch = await fetch(`http://localhost:3000/point3d/${imName}/${listX_3D}/${listY_3D}/${listZ_3D}`)
+                    .then(response => response.text())
+                    .then(response => {
+                        console.log(response);
+                        return response;
+                    })
+                    .catch(error => console.log('Error caught: ' + error));
+
+                let point2d_fetch = await fetch(`http://localhost:3000/point2d/${imName}/${listX}/${listY}`)
+                    .then(response => response.text())
+                    .then(response => {
+                        console.log(response);
+                        return response;
+                    })
+                    .catch(error => console.log('Error caught: ' + error));
+
+                let body = `<file>
+                                <point2d>
+                                    ${point2d_fetch}
+                                </point2d>
+                                <point3d>
+                                    ${point3d_fetch}
+                                </point3d>
+                                <calib>
+                                    <ExportAPERO>
+                                        <NameIn>FRAN_0242_00110_L</NameIn>
+                                        <CalibrationInternConique>
+                                            <KnownConv>eConvApero_DistM2C</KnownConv>
+                                            <PP>2934 2182</PP>
+                                            <F>8150</F>
+                                            <SzIm>5868 4364</SzIm>
+                                            <CalibDistortion>
+                                                <ModRad>
+                                                    <CDist>2934 2182</CDist>
+                                                </ModRad>
+                                            </CalibDistortion>
+                                        </CalibrationInternConique>
+                                    </ExportAPERO>
+                                </calib>
+                                <url>http://search-engine.alegoria-project.fr/api/v0_1/images/${imgName.replace('.jpg', '')}
+                                                            </url>
+                            </file>`
+                
+                console.log(body);
+
+                fetch(`http://localhost:3000/aspro/${imName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/xml' },
+                    body: body
+                })
+                .then(response => response.text())
+                .then(response => console.log(response))
+                .catch(error => console.log('Error caught: ' + error));
+                
             }
+            console.log("http://search-engine.alegoria-project.fr/api/v0_1/images/" + imgName);
 
             // Show oriented image using micmac aspro xml
             function showResection(){
